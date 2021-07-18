@@ -12,27 +12,63 @@ using System.Linq;
 using System.Reflection.Emit;
 using Steamworks;
 using Steamworks.Data;
+using BepInEx.Logging;
 
-namespace ShareEm.Patches
+namespace ShareEmRebalanced.Patches
 {
+
+    [HarmonyPatch(typeof(LootContainerInteract), nameof(LootContainerInteract.GetName))]
+    class RebalancedChestPriceSecond
+    {
+
+
+        static void Postfix(LootContainerInteract __instance, ref string __result)
+        {
+            __instance.price *= ShareEm.multiplier;
+            //Main.MainLogger?.LogMessage($"The base price {__instance.basePrice} is of the charts and results in {__instance.price}");
+            if (__instance.price < 1)
+            {
+                __result= "Open chest";
+            }
+            __result = string.Format("{0} Gold\n<size=75%>open chest", __instance.price);
+
+        }
+
+    }
+
     [HarmonyPatch]
     class ShareEm
     {
 
+        internal static int multiplier = 1;
+
+        [HarmonyPatch(typeof(LootContainerInteract), nameof(LootContainerInteract.GetName))]
+        static void GetNameLog()
+        {
+            Main.MainLogger?.LogMessage("Got log line for " + nameof(GetNameLog));
+
+        }
+
+        [HarmonyPatch(typeof(SteamLobby), nameof(SteamLobby.StartGame)), HarmonyPostfix]
+        static void GetMemberCount(SteamLobby __instance)
+        {
+            Main.MainLogger?.LogMessage("Multiply Chest prices by " + __instance.currentLobby.MemberCount);
+            multiplier = __instance.currentLobby.MemberCount;
+        }
 
         /*
          * Create new packets.
          */
         public static Session session = new Session(Main.Id);
         private static BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Static;
-        [HarmonyPatch(typeof(Server), "InitializeServerPackets")]
+        [HarmonyPatch(typeof(Server), nameof(Server.InitializeServerPackets))]
         [HarmonyPostfix]
         static void CreateNewServerPackets()
         {
             session.CreateNewServerPacket("ServerHandleShare", ServerHandleShare);
         }
 
-        [HarmonyPatch(typeof(LocalClient), "InitializeClientData")]
+        [HarmonyPatch(typeof(LocalClient), nameof(LocalClient.InitializeClientData))]
         [HarmonyPostfix]
         static void CreateNewClientPackets()
         {
@@ -40,13 +76,10 @@ namespace ShareEm.Patches
         }
 
 
-
-
         /*
          * Send share packet when a player picks up an item
          */
-        [HarmonyPatch(typeof(ClientSend), "PickupItem")]
-        [HarmonyPrefix]
+        [HarmonyPatch(typeof(ClientSend), nameof(ClientSend.PickupItem)), HarmonyPrefix]
         static void ClientSendSharePacket(ClientSend __instance, int itemID)
         {
             Item item = ItemManager.Instance.list[itemID].GetComponent<Item>();
@@ -72,7 +105,8 @@ namespace ShareEm.Patches
             if (fromClient == LocalClient.instance.myId)
             {
                 ChatBox.Instance.AppendMessage(-1, $"<color=red>You <color=white>just shared <color={getPowerupByID(itemID).GetColorName()}>{getPowerupByID(itemID).name} <color=white>with everyone!", "");
-            } else
+            }
+            else
             {
                 ChatBox.Instance.AppendMessage(-1, $"<color=red>{fromUsername} <color=white>just shared <color={getPowerupByID(itemID).GetColorName()}>{getPowerupByID(itemID).name} <color=white>with you!", "");
                 addPowerup(getPowerupByID(itemID));

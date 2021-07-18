@@ -2,15 +2,15 @@
 using BepInEx.Logging;
 using UnityEngine;
 using HarmonyLib;
-using NetworkHelper;
+using PacketHelper;
 using System;
 using System.IO;
 using System.Reflection;
 
 
-namespace ShareEm
+namespace ShareEmRebalanced
 {
-    [BepInPlugin(Id, "ShareEm", Version)]
+    [BepInPlugin(Id, nameof(ShareEmRebalanced), Version)]
     public class Main : BaseUnityPlugin
     {
         #region[Declarations]
@@ -21,7 +21,9 @@ namespace ShareEm
             GUID = AUTHOR + "_" + MODNAME,
             VERSION = "1.0.0.0";
 
-        internal readonly ManualLogSource log;
+        public static ManualLogSource MainLogger { get; private set; }
+
+        internal ManualLogSource log;
         internal readonly Harmony harmony;
         internal readonly Assembly assembly;
         public readonly string modFolder;
@@ -29,15 +31,16 @@ namespace ShareEm
         #endregion
 
 
-        public const string Id = "mod.iiveil.ShareEm";
+        public const string Id = "mod.susch19.ShareEmRebalanced";
         public const string Version = "1.0.0";
-        public const string Name = "ShareEm";
-        public static Session session = new Session(Id);
+        public const string Name = "ShareEmRebalanced";
         public Main()
         {
-            
-            log = Logger;
-            harmony = new Harmony(Id);
+
+            log = base.Logger;
+            MainLogger = log;
+            MainLogger.LogMessage("Share Em All!");
+             harmony = new Harmony(Id);
             assembly = Assembly.GetExecutingAssembly();
             modFolder = Path.GetDirectoryName(assembly.Location);
         }
@@ -45,7 +48,7 @@ namespace ShareEm
         public void Start()
         {
             harmony.PatchAll(assembly);
-            
+
         }
     }
 }
