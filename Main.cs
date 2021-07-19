@@ -16,10 +16,14 @@ namespace ShareEmRebalanced
         #region[Declarations]
 
         public const string
-            MODNAME = "$safeprojectname$",
+            MODNAME = "ShareEmRebalanced",
             AUTHOR = "",
             GUID = AUTHOR + "_" + MODNAME,
             VERSION = "1.0.0.0";
+
+        public const int StaticPlayerIncrease = 0;
+
+        public static int PlayersInLobby => StaticPlayerIncrease + GameManager.instance.GetPlayersInLobby();
 
         public static ManualLogSource MainLogger { get; private set; }
 
@@ -40,7 +44,7 @@ namespace ShareEmRebalanced
             log = base.Logger;
             MainLogger = log;
             MainLogger.LogMessage("Share Em All!");
-             harmony = new Harmony(Id);
+            harmony = new Harmony(Id);
             assembly = Assembly.GetExecutingAssembly();
             modFolder = Path.GetDirectoryName(assembly.Location);
         }

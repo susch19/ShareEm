@@ -13,48 +13,14 @@ using System.Reflection.Emit;
 using Steamworks;
 using Steamworks.Data;
 using BepInEx.Logging;
+using static GameSettings;
 
 namespace ShareEmRebalanced.Patches
 {
 
-    [HarmonyPatch(typeof(LootContainerInteract), nameof(LootContainerInteract.GetName))]
-    class RebalancedChestPriceSecond
-    {
-
-
-        static void Postfix(LootContainerInteract __instance, ref string __result)
-        {
-            __instance.price *= ShareEm.multiplier;
-            //Main.MainLogger?.LogMessage($"The base price {__instance.basePrice} is of the charts and results in {__instance.price}");
-            if (__instance.price < 1)
-            {
-                __result= "Open chest";
-            }
-            __result = string.Format("{0} Gold\n<size=75%>open chest", __instance.price);
-
-        }
-
-    }
-
     [HarmonyPatch]
     class ShareEm
     {
-
-        internal static int multiplier = 1;
-
-        [HarmonyPatch(typeof(LootContainerInteract), nameof(LootContainerInteract.GetName))]
-        static void GetNameLog()
-        {
-            Main.MainLogger?.LogMessage("Got log line for " + nameof(GetNameLog));
-
-        }
-
-        [HarmonyPatch(typeof(SteamLobby), nameof(SteamLobby.StartGame)), HarmonyPostfix]
-        static void GetMemberCount(SteamLobby __instance)
-        {
-            Main.MainLogger?.LogMessage("Multiply Chest prices by " + __instance.currentLobby.MemberCount);
-            multiplier = __instance.currentLobby.MemberCount;
-        }
 
         /*
          * Create new packets.
